@@ -105,6 +105,8 @@ public class Exercice1_0 {
                         Random rand = new Random();
                         Color randomColor = new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256));
                         robi.setColor(randomColor);
+                        //Arret apres un tour complet
+                        animationTimer.stop();
                     }
                     break;
             }

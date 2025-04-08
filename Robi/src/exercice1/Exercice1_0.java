@@ -31,14 +31,25 @@ public class Exercice1_0 {
             public void componentResized(ComponentEvent e) {
                 Dimension newSize = space.getSize();
                 Point pos = robi.getPosition();
+                Dimension dim = robi.getDimension();
 
+                // Calculer les rapports d’échelle
                 double scaleX = (double) newSize.width / lastSize.width;
                 double scaleY = (double) newSize.height / lastSize.height;
 
+                // Recalculer la position
                 int newX = (int) (pos.x * scaleX);
                 int newY = (int) (pos.y * scaleY);
 
+                // Recalculer la taille
+                int newWidth = (int) (dim.width * scaleX);
+                int newHeight = (int) (dim.height * scaleY);
+
+                // Appliquer les nouvelles valeurs
                 robi.setPosition(new Point(newX, newY));
+                robi.setDimension(new Dimension(newWidth, newHeight));
+
+                // Mettre à jour la taille de référence
                 lastSize = newSize;
             }
         });
@@ -54,26 +65,31 @@ public class Exercice1_0 {
 
     private void animate() {
         try {
+            // Déplacement vers la droite
             while (robi.getPosition().x + robi.getDimension().width < space.getWidth()) {
-                robi.setPosition(new Point(robi.getPosition().x + 1, robi.getPosition().y));
+                robi.translate(new Point(1, 0));
                 Thread.sleep(5);
             }
 
+            // Déplacement vers le bas
             while (robi.getPosition().y + robi.getDimension().height < space.getHeight()) {
-                robi.setPosition(new Point(robi.getPosition().x, robi.getPosition().y + 1));
+                robi.translate(new Point(0, 1));
                 Thread.sleep(5);
             }
 
+            // Déplacement vers la gauche
             while (robi.getPosition().x > 0) {
-                robi.setPosition(new Point(robi.getPosition().x - 1, robi.getPosition().y));
+                robi.translate(new Point(-1, 0));
                 Thread.sleep(5);
             }
 
+            // Déplacement vers le haut
             while (robi.getPosition().y > 0) {
-                robi.setPosition(new Point(robi.getPosition().x, robi.getPosition().y - 1));
+                robi.translate(new Point(0, -1));
                 Thread.sleep(5);
             }
 
+            // Changement de couleur aléatoire
             Random rand = new Random();
             Color randomColor = new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256));
             robi.setColor(randomColor);
@@ -82,6 +98,7 @@ public class Exercice1_0 {
             e.printStackTrace();
         }
     }
+
 
     public static void main(String[] args) {
         new Exercice1_0();

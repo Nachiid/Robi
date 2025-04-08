@@ -1,7 +1,8 @@
-package exercice3;
+ package exercice3;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Point;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
@@ -58,8 +59,65 @@ public class Exercice3_0 {
 	}
 
 	Command getCommandFromExpr(SNode expr) {
-		return null;
-	}
+        String target = expr.get(0).contents(); // Récupère le nom de l'objet cible
+        String command = expr.get(1).contents(); // Récupère la commande à exécuter
+        
+        if (target.equals("space")) {
+            if (command.equals("setColor")) {
+                String colorName = expr.get(2).contents();
+                Color color = getColorByName(colorName);
+                return new SpaceChangeColor(color);
+            } else if (command.equals("sleep")) {
+                int delay = Integer.parseInt(expr.get(2).contents());
+                return new SpaceSleep(delay);
+            }
+        } else if (target.equals("robi")) {
+            if (command.equals("setColor")) {
+                String colorName = expr.get(2).contents();
+                Color color = getColorByName(colorName);
+                return new RobiChangeColor(color);
+            } else if (command.equals("translate")) {
+                int x = Integer.parseInt(expr.get(2).contents());
+                int y = Integer.parseInt(expr.get(3).contents());
+                return new RobiTranslate(x, y);
+            }
+        }
+        return null; // retourne null si aucune commande ne correspond
+    }
+	public class RobiChangeColor implements Command {
+        Color newColor;
+
+        public RobiChangeColor(Color newColor) {
+            this.newColor = newColor;
+        }
+
+        @Override
+        public void run() {
+            robi.setColor(newColor);
+        }
+    }
+	 public class RobiTranslate implements Command {
+	        int x, y;
+
+	        public RobiTranslate(int x, int y) {
+	            this.x = x;
+	            this.y = y;
+	        }
+
+	        @Override
+	        public void run() {
+	            Point currentPosition = robi.getPosition();
+	            robi.setPosition(new Point(currentPosition.x + x, currentPosition.y + y));
+	        }
+	    }
+	private Color getColorByName(String name) {
+        try {
+            return (Color) Color.class.getField(name.toUpperCase()).get(null);
+        } catch (Exception e) {
+            System.out.println("Unknown color: " + name + ". Defaulting to BLACK.");
+            return null;
+        }
+    }
 
 	public static void main(String[] args) {
 		new Exercice3_0();
@@ -82,4 +140,20 @@ public class Exercice3_0 {
 		}
 
 	}
+	public class SpaceSleep implements Command {
+        int delay;
+
+        public SpaceSleep(int delay) {
+            this.delay = delay;
+        }
+
+        @Override
+        public void run() {
+            try {
+                Thread.sleep(delay);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

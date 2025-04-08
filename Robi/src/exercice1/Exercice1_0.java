@@ -3,18 +3,26 @@ package exercice1;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.Random;
 
 import graphicLayer.GRect;
 import graphicLayer.GSpace;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
 public class Exercice1_0 {
+    enum Etat { DROITE, BAS, GAUCHE, HAUT }
+
     GSpace space = new GSpace("Exercice 1", new Dimension(400, 400));
     GRect robi = new GRect();
 
     Dimension lastSize;
+    private Etat etat = Etat.DROITE;
+    private Timer animationTimer;
 
     public Exercice1_0() {
         space.addElement(robi);
@@ -22,10 +30,8 @@ public class Exercice1_0 {
         robi.setDimension(new Dimension(50, 50));
         space.open();
 
-        // Sauvegarde taille initiale
         lastSize = space.getSize();
 
-        // Ajoute le listener directement sur l’objet space (qui est un composant graphique)
         space.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
@@ -33,74 +39,108 @@ public class Exercice1_0 {
                 Point pos = robi.getPosition();
                 Dimension dim = robi.getDimension();
 
-                // Calculer les rapports d’échelle
                 double scaleX = (double) newSize.width / lastSize.width;
                 double scaleY = (double) newSize.height / lastSize.height;
 
-                // Recalculer la position
-                int newX = (int) (pos.x * scaleX);
-                int newY = (int) (pos.y * scaleY);
+                int newWidth = (int)(dim.width * scaleX);
+                int newHeight = (int)(dim.height * scaleY);
+                int newX = Math.max(0, Math.min((int)(pos.x * scaleX), newSize.width - newWidth));
+                int newY = Math.max(0, Math.min((int)(pos.y * scaleY), newSize.height - newHeight));
 
-                // Recalculer la taille
-                int newWidth = (int) (dim.width * scaleX);
-                int newHeight = (int) (dim.height * scaleY);
+                // Mise à jour thread-safe
+                SwingUtilities.invokeLater(() -> {
+                    robi.setPosition(new Point(newX, newY));
+                    robi.setDimension(new Dimension(newWidth, newHeight));
+                });
 
-                // Appliquer les nouvelles valeurs
-                robi.setPosition(new Point(newX, newY));
-                robi.setDimension(new Dimension(newWidth, newHeight));
-
-                // Mettre à jour la taille de référence
                 lastSize = newSize;
+                checkDirectionAfterResize();
             }
         });
 
-        // Animation dans un thread séparé
-        new Thread(() -> {
-        	//while true -> tester les redimensions
-            while (true) {
-                animate();
+        // Configuration du Timer pour l'animation
+        animationTimer = new Timer(10, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                animateStep();
             }
-        }).start();
+        });
+        animationTimer.start();
     }
 
-    private void animate() {
-        try {
-            // Déplacement vers la droite
-            while (robi.getPosition().x + robi.getDimension().width < space.getWidth()) {
-                robi.translate(new Point(1, 0));
-                Thread.sleep(5);
+    private void animateStep() {
+        SwingUtilities.invokeLater(() -> {
+            Point pos = robi.getPosition();
+            Dimension dim = robi.getDimension();
+            int step = 1;
+
+            switch (etat) {
+                case DROITE:
+                    if (pos.x + dim.width + step <= space.getWidth()) {
+                        robi.translate(new Point(step, 0));
+                    } else {
+                        etat = Etat.BAS;
+                    }
+                    break;
+                case BAS:
+                    if (pos.y + dim.height + step <= space.getHeight()) {
+                        robi.translate(new Point(0, step));
+                    } else {
+                        etat = Etat.GAUCHE;
+                    }
+                    break;
+                case GAUCHE:
+                    if (pos.x - step >= 0) {
+                        robi.translate(new Point(-step, 0));
+                    } else {
+                        etat = Etat.HAUT;
+                    }
+                    break;
+                case HAUT:
+                    if (pos.y - step >= 0) {
+                        robi.translate(new Point(0, -step));
+                    } else {
+                        etat = Etat.DROITE;
+                        // Changement de couleur après un tour complet
+                        Random rand = new Random();
+                        Color randomColor = new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256));
+                        robi.setColor(randomColor);
+                    }
+                    break;
             }
-
-            // Déplacement vers le bas
-            while (robi.getPosition().y + robi.getDimension().height < space.getHeight()) {
-                robi.translate(new Point(0, 1));
-                Thread.sleep(5);
-            }
-
-            // Déplacement vers la gauche
-            while (robi.getPosition().x > 0) {
-                robi.translate(new Point(-1, 0));
-                Thread.sleep(5);
-            }
-
-            // Déplacement vers le haut
-            while (robi.getPosition().y > 0) {
-                robi.translate(new Point(0, -1));
-                Thread.sleep(5);
-            }
-
-            // Changement de couleur aléatoire
-            Random rand = new Random();
-            Color randomColor = new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256));
-            robi.setColor(randomColor);
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        });
     }
 
+    private void checkDirectionAfterResize() {
+        SwingUtilities.invokeLater(() -> {
+            Point pos = robi.getPosition();
+            Dimension dim = robi.getDimension();
+            switch (etat) {
+                case DROITE:
+                    if (pos.x + dim.width >= space.getWidth()) {
+                        etat = Etat.BAS;
+                    }
+                    break;
+                case BAS:
+                    if (pos.y + dim.height >= space.getHeight()) {
+                        etat = Etat.GAUCHE;
+                    }
+                    break;
+                case GAUCHE:
+                    if (pos.x <= 0) {
+                        etat = Etat.HAUT;
+                    }
+                    break;
+                case HAUT:
+                    if (pos.y <= 0) {
+                        etat = Etat.DROITE;
+                    }
+                    break;
+            }
+        });
+    }
 
     public static void main(String[] args) {
-        new Exercice1_0();
+        SwingUtilities.invokeLater(() -> new Exercice1_0());
     }
 }

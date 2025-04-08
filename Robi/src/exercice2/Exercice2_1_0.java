@@ -3,28 +3,86 @@ package exercice2;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
 import graphicLayer.GRect;
 import graphicLayer.GSpace;
+import javax.swing.SwingUtilities;
 import stree.parser.SNode;
 import stree.parser.SParser;
-import javax.swing.SwingUtilities;
 
 public class Exercice2_1_0 {
-    GSpace space = new GSpace("Exercice 2_1", new Dimension(200, 100));
+    GSpace space = new GSpace("Exercice 2_1", new Dimension(400, 400));
     GRect robi = new GRect();
-    String script = "(space color white) (robi color red) (robi translate 10 0) (space sleep 100)"
-            + " (robi translate 0 10) (space sleep 100) (robi translate -10 0) (space sleep 100)"
-            + " (robi translate 0 -10) ";
+    String script = "(space color white)"
+    		+ "(robi color red)"
+    		+ "(robi translate 10 0)"
+    		+ "(space sleep 100)\n"
+    		+ "(robi translate 0 10)"
+    		+ "(space sleep 100)"
+    		+ "(robi translate -10 0)"
+    		+ "(space sleep 100)"
+    		+ "(robi translate 0 -10)";
+    
+    private Dimension lastSize;
 
     public Exercice2_1_0() {
         space.addElement(robi);
+        robi.setPosition(new Point(0, 0));
+        robi.setDimension(new Dimension(50, 50));
         space.open();
-        // Exécution du script dans un thread séparé
+        lastSize = space.getSize();
+
+        // Ajout du gestionnaire de redimensionnement
+        space.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                Dimension newSize = space.getSize();
+                Point pos = robi.getPosition();
+                Dimension dim = robi.getDimension();
+
+                double scaleX = (double) newSize.width / lastSize.width;
+                double scaleY = (double) newSize.height / lastSize.height;
+
+                int newWidth = (int)(dim.width * scaleX);
+                int newHeight = (int)(dim.height * scaleY);
+                int newX = Math.max(0, Math.min((int)(pos.x * scaleX), newSize.width - newWidth));
+                int newY = Math.max(0, Math.min((int)(pos.y * scaleY), newSize.height - newHeight));
+
+                SwingUtilities.invokeLater(() -> {
+                    robi.setPosition(new Point(newX, newY));
+                    robi.setDimension(new Dimension(newWidth, newHeight));
+                    checkBoundaries();
+                });
+
+                lastSize = newSize;
+            }
+        });
+
         new Thread(() -> this.runScript()).start();
+    }
+
+    private void checkBoundaries() {
+        SwingUtilities.invokeLater(() -> {
+            Point pos = robi.getPosition();
+            Dimension dim = robi.getDimension();
+            int spaceWidth = space.getWidth();
+            int spaceHeight = space.getHeight();
+
+            if (pos.x < 0) pos.x = 0;
+            else if (pos.x + dim.width > spaceWidth) 
+                pos.x = spaceWidth - dim.width;
+
+            if (pos.y < 0) pos.y = 0;
+            else if (pos.y + dim.height > spaceHeight) 
+                pos.y = spaceHeight - dim.height;
+
+            robi.setPosition(pos);
+        });
     }
 
     private void runScript() {
@@ -71,7 +129,6 @@ public class Exercice2_1_0 {
         if (children.size() < 3) return;
         String colorName = children.get(2).contents();
         Color color = getColorFromName(colorName);
-        // Mise à jour thread-safe de la couleur
         SwingUtilities.invokeLater(() -> {
             if ("space".equals(target)) {
                 space.setColor(color);
@@ -85,9 +142,9 @@ public class Exercice2_1_0 {
         if (children.size() < 4 || !"robi".equals(target)) return;
         int dx = Integer.parseInt(children.get(2).contents());
         int dy = Integer.parseInt(children.get(3).contents());
-        // Mise à jour thread-safe de la position
         SwingUtilities.invokeLater(() -> {
             robi.translate(new Point(dx, dy));
+            checkBoundaries(); // Vérification après déplacement
         });
     }
 
@@ -98,7 +155,7 @@ public class Exercice2_1_0 {
         }
         if (children.size() < 3) return;
         int duration = Integer.parseInt(children.get(2).contents());
-        Thread.sleep(duration); // Bloque le thread secondaire
+        Thread.sleep(duration);
     }
 
     private Color getColorFromName(String name) {

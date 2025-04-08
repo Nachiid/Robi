@@ -1,30 +1,12 @@
 package exercice4;
 
-// 
-//	(space setColor black)  
-//	(robi setColor yellow) 
-//	(space sleep 2000) 
-//	(space setColor white)  
-//	(space sleep 1000) 	
-//	(robi setColor red)		  
-//	(space sleep 1000)
-//	(robi translate 100 0)
-//	(space sleep 1000)
-//	(robi translate 0 50)
-//	(space sleep 1000)
-//	(robi translate -100 0)
-//	(space sleep 1000)
-//	(robi translate 0 -40) ) 
-//
 
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import graphicLayer.GRect;
 import graphicLayer.GSpace;
@@ -33,155 +15,151 @@ import stree.parser.SParser;
 import tools.Tools;
 
 public class Exercice4_1_0 {
-	// Une seule variable d'instance
-	Environment environment = new Environment();
+    Environment environment = new Environment();
+    Dimension lastSize; // ✅ Ajout pour le redimensionnement
 
-	public Exercice4_1_0() {
-		// space et robi sont temporaires ici
-		GSpace space = new GSpace("Exercice 4", new Dimension(200, 100));
-		GRect robi = new GRect();
+    public Exercice4_1_0() {
+        GSpace space = new GSpace("Exercice 4", new Dimension(200, 100));
+        GRect robi = new GRect();
 
-		space.addElement(robi);
-		space.open();
+        space.addElement(robi);
+        space.open();
 
-		Reference spaceRef = new Reference(space);
-		Reference robiRef = new Reference(robi);
+        lastSize = space.getSize(); // ✅ Sauvegarde taille initiale
 
-		// Initialisation des references : on leur ajoute les primitives qu'elles
-		// comprennent
-		spaceRef.addCommand("color", new SetColor());
-		spaceRef.addCommand("sleep", new Sleep());
-		robiRef.addCommand("color", new SetColor());
-		robiRef.addCommand("translate", new Translate());
+        // ✅ Gestion du redimensionnement
+        space.addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent e) {
+                Dimension newSize = space.getSize();
+                Point pos = robi.getPosition();
+                Dimension dim = robi.getDimension();
 
-		// Enregistrement des references dans l'environnement par leur nom
-		environment.addReference("space", spaceRef);
-		environment.addReference("robi", robiRef);
+                double scaleX = (double) newSize.width / lastSize.width;
+                double scaleY = (double) newSize.height / lastSize.height;
 
-		this.mainLoop();
-	}
+                int newWidth = (int) (dim.width * scaleX);
+                int newHeight = (int) (dim.height * scaleY);
+                int newX = Math.max(0, Math.min((int) (pos.x * scaleX), newSize.width - newWidth));
+                int newY = Math.max(0, Math.min((int) (pos.y * scaleY), newSize.height - newHeight));
 
-	private void mainLoop() {
-		while (true) {
-			// prompt
-			System.out.print("> ");
-			// lecture d'une série de s-expressions au clavier (return = fin de la série)
-			String input = Tools.readKeyboard();
-			// création du parser
-			SParser<SNode> parser = new SParser<>();
-			// compilation
-			List<SNode> compiled = null;
-			try {
-				compiled = parser.parse(input);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			// exécution des s-expressions compilées
-			Iterator<SNode> itor = compiled.iterator();
-			while (itor.hasNext()) {
-				this.run((SNode) itor.next());
-			}
-		}
-	}
+                final int fx = newX;
+                final int fy = newY;
+                final int fw = newWidth;
+                final int fh = newHeight;
 
-	private void run(SNode expr) {
-		// quel est le nom du receiver
-		String receiverName = expr.get(0).contents();
-		// quel est le receiver
-		Reference receiver = environment.getReferenceByName(receiverName);
-		// demande au receiver d'exécuter la s-expression compilée
-		receiver.run(expr);
-	}
+                javax.swing.SwingUtilities.invokeLater(() -> {
+                    robi.setPosition(new Point(fx, fy));
+                    robi.setDimension(new Dimension(fw, fh));
+                });
 
-	public static void main(String[] args) {
-		new Exercice4_1_0();
-	}
+                lastSize = newSize;
+            }
+        });
 
-}
+        Reference spaceRef = new Reference(space);
+        Reference robiRef = new Reference(robi);
 
-// Classes complémentaires
+        // Enregistrement des commandes pour space
+        spaceRef.primitives.put("setColor", this::spaceSetColor);
+        spaceRef.primitives.put("sleep", this::spaceSleep);
 
-class Environment {
-    private Map<String, Reference> references = new HashMap<>();
-    
-    public void addReference(String name, Reference ref) {
-        references.put(name, ref);
-    }
-    
-    public Reference getReferenceByName(String name) {
-        return references.get(name);
-    }
-}
+        // Enregistrement des commandes pour robi
+        robiRef.primitives.put("setColor", this::robiSetColor);
+        robiRef.primitives.put("translate", this::robiTranslate);
 
-class Reference {
-    private Object receiver;
-    private Map<String, Command> commands = new HashMap<>();
-    
-    public Reference(Object receiver) {
-        this.receiver = receiver;
-    }
-    
-    public void addCommand(String name, Command command) {
-        commands.put(name, command);
-    }
-    
-    public void run(SNode expr) {
-        String commandName = expr.get(1).contents();
-        Command command = commands.get(commandName);
-        if (command != null) {
-            command.run(receiver, expr);
-        } else {
-            System.out.println("Unknown command: " + commandName);
-        }
-    }
-}
+        environment.addReference("space", spaceRef);
+        environment.addReference("robi", robiRef);
 
-interface Command {
-    void run(Object receiver, SNode expr);
-}
-
-class SetColor implements Command {
-    @Override
-    public void run(Object receiver, SNode expr) {
-        String colorName = expr.get(2).contents();
-        Color color = getColorByName(colorName);
-        if (receiver instanceof GSpace) {
-            ((GSpace) receiver).setColor(color);
-        } else if (receiver instanceof GRect) {
-            ((GRect) receiver).setColor(color);
-        }
+        this.mainLoop();
     }
 
-    private Color getColorByName(String name) {
+    private Reference spaceSetColor(Reference receiver, SNode method) {
+        Color color = getColor(method.get(1).contents());
+        ((GSpace) receiver.receiver).setColor(color);
+        return receiver;
+    }
+
+    private Reference spaceSleep(Reference receiver, SNode method) {
         try {
-            return (Color) Color.class.getField(name.toUpperCase()).get(null);
-        } catch (Exception e) {
-            return Color.BLACK; // Default color
-        }
-    }
-}
-
-class Sleep implements Command {
-    @Override
-    public void run(Object receiver, SNode expr) {
-        int delay = Integer.parseInt(expr.get(2).contents());
-        try {
-            Thread.sleep(delay);
+            Thread.sleep(Integer.parseInt(method.get(1).contents()));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        return receiver;
     }
-}
 
-class Translate implements Command {
-    @Override
-    public void run(Object receiver, SNode expr) {
-        int x = Integer.parseInt(expr.get(2).contents());
-        int y = Integer.parseInt(expr.get(3).contents());
-        if (receiver instanceof GRect) {
-            GRect rect = (GRect) receiver;
-            rect.setPosition(new Point(rect.getPosition().x + x, rect.getPosition().y + y));
+    private Reference robiSetColor(Reference receiver, SNode method) {
+        Color color = getColor(method.get(1).contents());
+        ((GRect) receiver.receiver).setColor(color);
+        return receiver;
+    }
+
+    private Reference robiTranslate(Reference receiver, SNode method) {
+        int dx = Integer.parseInt(method.get(1).contents());
+        int dy = Integer.parseInt(method.get(2).contents());
+        ((GRect) receiver.receiver).translate(new Point(dx, dy));
+        return receiver;
+    }
+
+    private Color getColor(String colorName) {
+        try {
+            return (Color) Color.class.getField(colorName.toUpperCase()).get(null);
+        } catch (Exception e) {
+            return Color.BLACK;
         }
+    }
+
+    private void mainLoop() {
+        while (true) {
+            System.out.print("> ");
+            String input = Tools.readKeyboard();
+            SParser<SNode> parser = new SParser<>();
+            List<SNode> compiled = null;
+
+            try {
+                compiled = parser.parse(input);
+            } catch (IOException e) {
+                System.out.println("Erreur de lecture : " + e.getMessage());
+                continue;
+            }
+
+            Iterator<SNode> itor = compiled.iterator();
+            while (itor.hasNext()) {
+                try {
+                    this.run(itor.next());
+                } catch (RuntimeException e) {
+                    System.out.println("Erreur : " + e.getMessage());
+                } catch (Exception e) {
+                    System.out.println("Erreur inattendue : " + e.getMessage());
+                }
+            }
+        }
+    }
+    
+    public Command getSetColorCommand() {
+        return this::robiSetColor;
+    }
+
+    public Command getTranslateCommand() {
+        return this::robiTranslate;
+    }
+
+
+    private void run(SNode expr) {
+        String receiverName = expr.get(0).contents();
+        Reference receiver = environment.getReferenceByName(receiverName);
+
+        SNode commandExpr = new stree.parser.SDefaultNode();
+        for (int i = 1; i < expr.size(); i++) {
+            commandExpr.addChild(expr.get(i));
+        }
+
+        receiver.run(commandExpr);
+    }
+
+
+    public static void main(String[] args) {
+        new Exercice4_1_0();
     }
 }

@@ -49,9 +49,9 @@ public class Exercice4_1_0 {
 
 		// Initialisation des references : on leur ajoute les primitives qu'elles
 		// comprennent
-		spaceRef.addCommand("setColor", new SetColor());
+		spaceRef.addCommand("color", new SetColor());
 		spaceRef.addCommand("sleep", new Sleep());
-		robiRef.addCommand("setColor", new SetColor());
+		robiRef.addCommand("color", new SetColor());
 		robiRef.addCommand("translate", new Translate());
 
 		// Enregistrement des references dans l'environnement par leur nom

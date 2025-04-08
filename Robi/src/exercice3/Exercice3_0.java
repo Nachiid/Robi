@@ -19,12 +19,12 @@ public class Exercice3_0 {
     GSpace space = new GSpace("Exercice 3", new Dimension(400, 400));
     GRect robi = new GRect();
     String script = "" +
-        "(space setColor black) " +
-        "(robi setColor yellow)" +
+        "(space color black) " +
+        "(robi color yellow)" +
         "(space sleep 1000)" +
-        "(space setColor white)" +
+        "(space color white)" +
         "(space sleep 1000)" +
-        "(robi setColor red)" +
+        "(robi color red)" +
         "(space sleep 1000)" +
         "(robi translate 100 0)" +
         "(space sleep 1000)" +
@@ -114,7 +114,7 @@ public class Exercice3_0 {
 
     private Command handleEspace(String commande, List<SNode> nodes) {
         switch(commande) {
-            case "setColor": 
+            case "color": 
                 return new ChangementCouleurEspace(getCouleur(nodes.get(2).contents()));
             case "sleep": 
                 return new PauseEspace(Integer.parseInt(nodes.get(2).contents()));
@@ -124,7 +124,7 @@ public class Exercice3_0 {
 
     private Command handleRobi(String commande, List<SNode> nodes) {
         switch(commande) {
-            case "setColor": 
+            case "color": 
                 return new ChangementCouleurRobi(getCouleur(nodes.get(2).contents()));
             case "translate": 
                 return new DeplacementRobi(

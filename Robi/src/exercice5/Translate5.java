@@ -9,6 +9,9 @@ public class Translate5 implements Command5 {
         int dx = Integer.parseInt(method.get(1).contents());
         int dy = Integer.parseInt(method.get(2).contents());
         ((GElement) receiver.getReceiver()).translate(new Point(dx, dy));
+        
+        //System.out.println("→ Translation de " + receiver.getReceiver() + " vers (" + dx + ", " + dy + ")");
+
         return receiver;
     }
 }

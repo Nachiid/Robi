@@ -1,7 +1,6 @@
 package exercice5;
 
 import graphicLayer.*;
-import exercice4.*;
 
 import java.awt.*;
 import java.io.IOException;
@@ -30,6 +29,7 @@ public class Exercice5 {
         Reference5 spaceRef = new Reference5(space);
         spaceRef.addCommand("setColor", new SetColor5());
         spaceRef.addCommand("add", new AddElement(environment));
+        spaceRef.addCommand("setDim", new SetDim5());
         spaceRef.addCommand("sleep", new Sleep5());
 
         Reference5 rectRef = new Reference5(GRect.class);
@@ -45,14 +45,14 @@ public class Exercice5 {
 
     private void runScript() {
         String script = """
-(space setColor white)
-(space add robi (Rect new))
-(space.robi setColor blue)
-(space.robi setDim 150 100)
-(space.robi translate 30 20)
-(space.robi add alien (Image new "resources/pacman.png"))
-(space.robi.alien translate 20 20)
-            """;
+    (space setDim 150 120)
+    (space add robi (Rect new))
+    (space.robi setColor white)
+    (space.robi setDim 100 100)
+    (space.robi translate 20 10)
+    (space.robi add alien (Image new alien.gif))
+    (space.robi.alien translate 20 10)
+    """;
 
         SParser<SNode> parser = new SParser<>();
         try {
@@ -70,3 +70,24 @@ public class Exercice5 {
         new Exercice5();
     }
 }
+
+
+
+
+/*
+        String script = """
+    (space setDim 150 120)
+    (space sleep 2000)
+    (space add robi (Rect new))
+    (space sleep 2000)
+    (space.robi setColor white)
+    (space sleep 2000)
+    (space.robi setDim 100 100)
+    (space sleep 2000)
+    (space.robi translate 20 10)
+    (space sleep 2000)
+    (space.robi add alien (Image new alien.gif))
+    (space sleep 2000)
+    (space.robi.alien translate 20 10)
+    """;
+*/

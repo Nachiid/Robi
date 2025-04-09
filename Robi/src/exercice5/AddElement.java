@@ -17,10 +17,18 @@ public class AddElement implements Command5 {
         Reference5 elementRef = Interpreter5.compute(environment, method.get(2));
 
         Object parent = receiver.getReceiver();
-        if (parent instanceof GContainer) {
-            ((GContainer) parent).addElement((GElement) elementRef.getReceiver());
-            receiver.addChild(name, elementRef);
+
+        if (parent instanceof GContainer container) {
+            GElement element = (GElement) elementRef.getReceiver();
+
+            //System.out.println("Ajouté à : " + container + " → " + name + " = " + element);
+
+            container.addElement(element);
+            receiver.addChild(name, elementRef); 
             environment.addReference(name, elementRef);
+
+            container.repaint();
+
             return receiver;
         } else {
             throw new RuntimeException("Le receiver n'est pas un conteneur graphique.");

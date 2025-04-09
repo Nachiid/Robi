@@ -6,7 +6,7 @@ import stree.parser.SNode;
 
 public class Reference {
     Object receiver;
-    Map<String, Command> primitives = new HashMap<>();
+    protected Map<String, Command> primitives = new HashMap<>();
 
     public Reference(Object receiver) {
         this.receiver = receiver;

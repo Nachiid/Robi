@@ -1,6 +1,7 @@
 package exercice4;
 
 import java.awt.Dimension;
+
 import graphicLayer.*;
 import stree.parser.SNode;
 

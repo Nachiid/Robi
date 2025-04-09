@@ -1,24 +1,11 @@
 package exercice4;
 
-
 import java.awt.Dimension;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-import exercice4.commands.SetColor;
-import exercice4.commands.Sleep;
-import exercice4.commands.AddElement;
-import exercice4.commands.DelElement;
-import exercice4.commands.NewElement;
-import exercice4.commands.NewImage;
-import exercice4.commands.NewString;
-
-import exercice4.interpreter.Interpreter;
-
-
 import graphicLayer.*;
-import stree.parser.SDefaultNode;
 import stree.parser.SNode;
 import stree.parser.SParser;
 import tools.Tools;
@@ -36,10 +23,13 @@ public class Exercice4_2_0 {
         Reference imageClassRef = new Reference(GImage.class);
         Reference stringClassRef = new Reference(GString.class);
 
+
         spaceRef.addCommand("setColor", new SetColor());
         spaceRef.addCommand("sleep", new Sleep());
-        spaceRef.addCommand("add", new AddElement());
+        spaceRef.addCommand("add", new AddElement(environment));
+        rectClassRef.addCommand("setDim", new SetDim());
         spaceRef.addCommand("del", new DelElement());
+
 
         rectClassRef.addCommand("new", new NewElement());
         ovalClassRef.addCommand("new", new NewElement());
@@ -47,10 +37,10 @@ public class Exercice4_2_0 {
         stringClassRef.addCommand("new", new NewString());
 
         environment.addReference("space", spaceRef);
-        environment.addReference("rect.class", rectClassRef);
-        environment.addReference("oval.class", ovalClassRef);
-        environment.addReference("image.class", imageClassRef);
-        environment.addReference("label.class", stringClassRef);
+        environment.addReference("Rect", rectClassRef);
+        environment.addReference("Oval", ovalClassRef);
+        environment.addReference("Image", imageClassRef);
+        environment.addReference("Label", stringClassRef);
 
         this.mainLoop();
     }
@@ -79,6 +69,17 @@ public class Exercice4_2_0 {
     }
 
     public static void main(String[] args) {
+
+
         new Exercice4_2_0();
     }
 }
+
+
+
+/*(space add shape (Rect new)) (shape translate 100 50) (shape setColor blue) (shape setDim 20 20) (space sleep 1000) (shape setDim 40 40) (space sleep 1000) (shape setDim 60 30) (space sleep 1000) (shape setDim 100 60) (space sleep 1000) (shape setDim 150 80)
+
+
+(space add robi (Rect new)) (robi translate 130 50) (robi setColor yellow) (robi setDim 80 40) (space sleep 2000) (space add momo (Oval new)) (momo setColor red) (momo translate 80 80) (momo setDim 200 200) (space sleep 2000) (space add pif (Image new resources/pacman.png)) (pif translate 100 0) (space sleep 2000) (space add hello (Label new "Hello world")) (hello translate 10 10) (hello setColor black) 
+
+*/

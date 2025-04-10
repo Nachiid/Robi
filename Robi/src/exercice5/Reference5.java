@@ -14,6 +14,11 @@ public class Reference5 {
     public Reference5(Object receiver) {
         this.receiver = receiver;
     }
+    
+    public Command5 getCommand(String name) {
+        return primitives.get(name);
+    }
+
 
     public Object getReceiver() {
         return receiver;

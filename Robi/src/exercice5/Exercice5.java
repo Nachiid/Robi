@@ -46,11 +46,17 @@ public class Exercice5 {
     private void runScript() {
         String script = """
     (space setDim 150 120)
+    (space sleep 2000)
     (space add robi (Rect new))
+    (space sleep 2000)
     (space.robi setColor white)
+    (space sleep 2000)
     (space.robi setDim 100 100)
+    (space sleep 2000)
     (space.robi translate 20 10)
+    (space sleep 2000)
     (space.robi add alien (Image new alien.gif))
+    (space sleep 2000)
     (space.robi.alien translate 20 10)
     """;
 

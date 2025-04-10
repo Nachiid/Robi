@@ -5,6 +5,13 @@ import stree.parser.SNode;
 
 public class Interpreter5 {
     public static Reference5 compute(Environment5 env, SNode expr) {
+    	
+        if (expr.size() == 0) {
+            System.err.println("Expression vide détectée !");
+            System.err.println("Expr contenu : " + expr);
+            throw new RuntimeException("Expression vide !");
+        }
+        
         String receiverName = expr.get(0).contents();
         Reference5 receiver = env.getReferenceByPath(receiverName);
 
@@ -16,5 +23,4 @@ public class Interpreter5 {
         return receiver.run(commandExpr);
     }
 }
-
 
